@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ToDoTaskList</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+<header class="app-header">
+<h1>ToDoTaskList</h1>
+<div class="top-nav">
+  <button id="nav-todo" class="active">ToDoTaskList</button>
+  <button id="nav-meet">Meeting Set</button>
+ </div>
+</header>
+<div id="todo-page" class="page active">
+  <section class="controls">
+    <input id="person-title-input" type="text" placeholder="Kişi Başlığı">
+    <button id="add-person-btn">Kişi Ekle</button>
+    <input id="search-input" type="text" placeholder="Arama (kişi/görev)">
+    <select id="status-filter">
+      <option value="all">Durum: Hepsi</option>
+      <option value="todo">Durum: Bekleyen</option>
+      <option value="done">Durum: Tamamlanan</option>
+    </select>
+    <select id="priority-filter">
+      <option value="all">Öncelik: Hepsi</option>
+      <option value="low">Öncelik: Düşük</option>
+      <option value="medium">Öncelik: Orta</option>
+      <option value="high">Öncelik: Yüksek</option>
+    </select>
+  </section>
+  <main id="person-list-container" class="person-list"></main>
+  </div>
+  <div id="meeting-page" class="page">
+    <div class="meeting-card">
+      <div class="meeting-form">
+        <input id="meeting-date-input" type="date" placeholder="Tarih">
+        <input id="meeting-title-input" type="text" placeholder="Toplantı">
+        <input id="meeting-location-input" type="text" placeholder="Konum">
+        <input id="meeting-time-input" type="time" placeholder="Saat">
+        <input id="meeting-people-input" type="text" placeholder="Kimler">
+        <button id="add-meeting-btn" type="button">Ekle</button>
+      </div>
+      <div id="meeting-groups" class="meeting-groups"></div>
+      <div class="past-section collapsed">
+        <div class="past-header"><span>Yapılan Toplantılar</span><span class="count">(0)</span></div>
+        <ul id="past-list" class="meeting-list"></ul>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>
