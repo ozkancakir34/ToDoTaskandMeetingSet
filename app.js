@@ -1,4 +1,5 @@
 const appState={persons:[],pid:1,tid:1,meetings:[],mid:1}
+const API_BASE='/api'
 const LS_KEY='ToDoTaskList_state'
 const qs=s=>document.querySelector(s)
 const personInput=qs('#person-title-input')
@@ -14,8 +15,11 @@ const navMeet=qs('#nav-meet')
 const todoPage=qs('#todo-page')
 const meetPage=qs('#meeting-page')
 function createEl(tag,cls){const el=document.createElement(tag);if(cls)el.className=cls;return el}
-function save(){localStorage.setItem(LS_KEY,JSON.stringify({persons:appState.persons,pid:appState.pid,tid:appState.tid,meetings:appState.meetings,mid:appState.mid}))}
-function load(){const raw=localStorage.getItem(LS_KEY);if(!raw)return;try{const s=JSON.parse(raw);appState.persons=s.persons||[];appState.pid=s.pid||1;appState.tid=s.tid||1;appState.meetings=s.meetings||[];appState.mid=s.mid||1}catch(e){}}
+let saveTimer=null
+async function apiLoad(){try{const r=await fetch(`${API_BASE}/state`);if(!r.ok)return null;return await r.json()}catch(e){return null}}
+async function apiSave(){try{await fetch(`${API_BASE}/state`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({persons:appState.persons,pid:appState.pid,tid:appState.tid,meetings:appState.meetings,mid:appState.mid})})}catch(e){} }
+function save(){if(saveTimer)clearTimeout(saveTimer);saveTimer=setTimeout(apiSave,400)}
+async function load(){const s=await apiLoad();if(s){appState.persons=s.persons||[];appState.pid=s.pid||1;appState.tid=s.tid||1;appState.meetings=s.meetings||[];appState.mid=s.mid||1}}
 function addPerson(title){const id=appState.pid++
 const person={id,title:title&&title.trim()?title.trim():`Kişi ${id} ToDoList`,tasks:[]}
 appState.persons.push(person)
@@ -103,8 +107,9 @@ noteBtn.classList.toggle('has-note',Boolean((task.notes||'').trim()))
 ta.addEventListener('input',()=>{task.notes=ta.value;noteBtn.classList.toggle('has-note',Boolean((task.notes||'').trim()));save()})
 }
 addPersonBtn.addEventListener('click',()=>{addPerson(personInput.value);personInput.value=''})
-load();if(appState.persons.length){appState.persons.forEach(p=>renderPerson(p))}
-applyFilters()
+async function init(){await load();container.innerHTML='';if(appState.persons.length){appState.persons.forEach(p=>renderPerson(p))}applyFilters();if(appState.meetings.length){appState.meetings.forEach(renderMeeting);updatePastCount();[...new Set(appState.meetings.filter(x=>!x.done).map(x=>x.date))].forEach(updateDayCount)}}
+init()
+setInterval(async()=>{const s=await apiLoad();if(!s)return;const changed=JSON.stringify({persons:appState.persons,meetings:appState.meetings})!==JSON.stringify({persons:s.persons,meetings:s.meetings});if(changed){appState.persons=s.persons||[];appState.pid=s.pid||1;appState.tid=s.tid||1;appState.meetings=s.meetings||[];appState.mid=s.mid||1;container.innerHTML='';if(appState.persons.length){appState.persons.forEach(renderPerson)}applyFilters();const meetingGroupsEl=document.querySelector('#meeting-groups');if(meetingGroupsEl)meetingGroupsEl.innerHTML='';const pastListEl=document.querySelector('#past-list');if(pastListEl)pastListEl.innerHTML='';if(appState.meetings.length){appState.meetings.forEach(renderMeeting);updatePastCount();[...new Set(appState.meetings.filter(x=>!x.done).map(x=>x.date))].forEach(updateDayCount)}}},5000)
 container.addEventListener('dragover',e=>{e.preventDefault();const dragging=document.querySelector('.person-card.dragging');if(!dragging)return;const after=getCardAfterElement(container,e.clientY);if(after==null){container.appendChild(dragging)}else{container.insertBefore(dragging,after)}})
 const getTaskAfterElement=(list,y)=>{const els=[...list.querySelectorAll('.task-item:not(.dragging)')];let closest={offset:Number.NEGATIVE_INFINITY,element:null};els.forEach(child=>{const box=child.getBoundingClientRect();const offset=y-box.top-box.height/2;if(offset<0&&offset>closest.offset){closest={offset,element:child}}});return closest.element}
 const reorderTasksFromDOM=(person,list)=>{const ids=[...list.querySelectorAll('.task-item')].map(li=>Number(li.dataset.tid)).filter(id=>!isNaN(id));person.tasks=ids.map(id=>person.tasks.find(t=>t.id===id)).filter(Boolean)}
